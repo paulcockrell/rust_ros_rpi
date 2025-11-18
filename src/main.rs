@@ -215,14 +215,17 @@ async fn main() {
     //
     // Task D - Motor controller
     {
-        let mut motor_1 = Motor::new(26, 21, 4).unwrap();
+        let mut motors_left = Motor::new(26, 21, 4).unwrap();
+        let mut motors_right = Motor::new(27, 18, 17).unwrap();
         let speed = 100;
 
         task::spawn_blocking(move || {
             loop {
-                let _ = motor_1.forward(speed);
+                let _ = motors_left.forward(speed);
+                let _ = motors_right.forward(speed);
                 std::thread::sleep(Duration::from_millis(2000));
-                let _ = motor_1.backward(speed);
+                let _ = motors_left.backward(speed);
+                let _ = motors_right.backward(speed);
                 std::thread::sleep(Duration::from_millis(2000));
             }
         });
