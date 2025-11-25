@@ -21,6 +21,12 @@ impl Servo {
     }
 }
 
+impl Drop for Servo {
+    fn drop(&mut self) {
+        let _ = self.set_angle(0);
+    }
+}
+
 fn map_range(value: i32, in_min: i32, in_max: i32, out_min: i32, out_max: i32) -> i32 {
     out_min + (value - in_min) * (out_max - out_min) / (in_max - in_min)
 }

@@ -1,12 +1,9 @@
 mod hal;
 use hal::ldr::Ldr;
 use hal::motor::Motor;
+use hal::neopixel::Neopixel;
 use hal::servo::Servo;
 use hal::ultrasound::UltrasoundSensor;
-
-use rs_ws281x::ChannelBuilder;
-use rs_ws281x::ControllerBuilder;
-use rs_ws281x::StripType;
 
 use rand::Rng;
 use serde::Deserialize;
@@ -214,35 +211,20 @@ async fn main() {
 
         let shutdown = shutdown.clone();
 
-        tokio::spawn(async move {
-            let mut controller = ControllerBuilder::new()
-                .freq(800_000)
-                .dma(10)
-                .channel(
-                    0, // Channel Index
-                    ChannelBuilder::new()
-                        .pin(12) // GPIO 10 = SPI0 MOSI
-                        .count(6) // Number of LEDs
-                        .strip_type(StripType::Ws2812)
-                        .brightness(50) // default: 255
-                        .build(),
-                )
-                .build()
-                .unwrap();
+        tokio::task::spawn_blocking(move || {
+            let mut neopixel = Neopixel::new().expect("Neopixel failed");
 
             while !shutdown.load(Ordering::SeqCst) {
                 let r = rand::rng().random_range(0..=255);
                 let g = rand::rng().random_range(0..=255);
                 let b = rand::rng().random_range(0..=255);
 
-                let leds = controller.leds_mut(0);
-                for led in leds {
-                    *led = [r, g, b, 0];
-                }
+                let _ = neopixel.set_pixels(r, g, b, 0);
 
-                controller.render().unwrap();
                 std::thread::sleep(Duration::from_millis(250));
             }
+
+            let _ = neopixel.set_pixels(0, 0, 0, 0);
 
             println!("Exiting Neopixel thread");
         });
