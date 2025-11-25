@@ -211,7 +211,7 @@ async fn main() {
 
         let shutdown = shutdown.clone();
 
-        tokio::task::spawn_blocking(move || {
+        tokio::spawn(async move {
             let mut neopixel = Neopixel::new().expect("Neopixel failed");
 
             while !shutdown.load(Ordering::SeqCst) {
