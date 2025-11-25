@@ -4,6 +4,11 @@ use hal::motor::Motor;
 use hal::servo::Servo;
 use hal::ultrasound::UltrasoundSensor;
 
+use rs_ws281x::ChannelBuilder;
+use rs_ws281x::ControllerBuilder;
+use rs_ws281x::StripType;
+
+use rand::Rng;
 use serde::Deserialize;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -105,9 +110,6 @@ async fn main() {
         let shutdown = shutdown.clone();
         let mut servo = Servo::new().unwrap();
 
-        let min_pulse: u16 = 150;
-        let max_pulse: u16 = 600;
-
         task::spawn_blocking(move || {
             while !shutdown.load(Ordering::SeqCst) {
                 if let Some(cmd) = servo_rx.blocking_recv() {
@@ -130,18 +132,20 @@ async fn main() {
         let tx = servo_tx.clone();
 
         tokio::spawn(async move {
-            let mut last_reading = 0u16;
+            let mut last_avg = 0.0;
+            let mut avg = 1.0;
 
             while !shutdown.load(Ordering::SeqCst) {
                 let dist = us.measure_cm().unwrap_or(0);
-                let angle = dist.clamp(0, 100) as u8;
+                let new_value = dist.clamp(0, 100);
+                avg = avg * 0.7 + (new_value as f64) * 0.3;
 
-                if dist != last_reading {
-                    println!("Ultrasound changed: {}", dist);
+                if avg != last_avg {
+                    println!("Ultrasound changed: {}", avg);
 
-                    last_reading = dist;
+                    last_avg = avg;
 
-                    if let Err(e) = tx.send(Command::Servo { angle }).await {
+                    if let Err(e) = tx.send(Command::Servo { angle: avg as u8 }).await {
                         eprintln!("Servo send failed: {}", e);
                     }
                 }
@@ -202,6 +206,45 @@ async fn main() {
             socket_responder("/tmp/robot.sock", tx)
                 .await
                 .expect("socket failed");
+        });
+    }
+
+    {
+        println!("Staring Neopixel thread");
+
+        let shutdown = shutdown.clone();
+
+        tokio::spawn(async move {
+            let mut controller = ControllerBuilder::new()
+                .freq(800_000)
+                .dma(10)
+                .channel(
+                    0, // Channel Index
+                    ChannelBuilder::new()
+                        .pin(12) // GPIO 10 = SPI0 MOSI
+                        .count(6) // Number of LEDs
+                        .strip_type(StripType::Ws2812)
+                        .brightness(50) // default: 255
+                        .build(),
+                )
+                .build()
+                .unwrap();
+
+            while !shutdown.load(Ordering::SeqCst) {
+                let r = rand::rng().random_range(0..=255);
+                let g = rand::rng().random_range(0..=255);
+                let b = rand::rng().random_range(0..=255);
+
+                let leds = controller.leds_mut(0);
+                for led in leds {
+                    *led = [r, g, b, 0];
+                }
+
+                controller.render().unwrap();
+                std::thread::sleep(Duration::from_millis(250));
+            }
+
+            println!("Exiting Neopixel thread");
         });
     }
 
