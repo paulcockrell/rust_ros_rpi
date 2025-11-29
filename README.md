@@ -4,6 +4,14 @@ POC for using Rust and PIGPIO to read LDR sensors on a RaspberryPI >= 4
 
 ## PI Setup
 
+Install build dependencies
+
+```bash
+sudo apt update
+sudo apt install -y libclang-dev clang llvm libopencv-dev pkg-config
+
+```
+
 You must be running 64 Bit image (Trixie) for these steps to work.
 
 ```bash

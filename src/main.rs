@@ -242,9 +242,9 @@ async fn main() {
                     }
                     Err(e) => eprintln!("Camera error: {e}"),
                 }
-            }
 
-            tokio::time::sleep(Duration::from_millis(50)).await;
+                tokio::time::sleep(Duration::from_millis(50)).await;
+            }
         });
     }
 
