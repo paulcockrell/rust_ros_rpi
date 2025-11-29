@@ -232,6 +232,23 @@ async fn main() {
     }
 
     {
+        let mut camera = Camera::new(0).expect("Camera connect failed");
+
+        tokio::spawn(async move {
+            loop {
+                match camera.grayscale() {
+                    Ok(gray) => {
+                        println!("Captured frame {:?}", gray.size());
+                    }
+                    Err(e) => eprintln!("Camera error: {e}"),
+                }
+            }
+
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        });
+    }
+
+    {
         println!("Starting Command thread");
 
         let shutdown = shutdown.clone();
