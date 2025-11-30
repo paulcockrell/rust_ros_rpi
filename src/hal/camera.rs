@@ -1,32 +1,41 @@
 use anyhow::{Context, Ok, Result};
-use opencv::{core, imgproc, prelude::*, videoio};
+use opencv::{imgproc, prelude::*, videoio};
 
 pub struct Camera {
     cap: videoio::VideoCapture,
+    last_save: std::time::Instant,
 }
 
 impl Camera {
-    pub fn new(index: i32) -> Result<Self> {
-        let mut cap = videoio::VideoCapture::new(index, videoio::CAP_V4L2)
-            .context("Failed to open camera")?;
+    pub fn new() -> Result<Self> {
+        let pipeline =
+            "libcamerasrc ! video/x-raw,format=BGR,width=640,height=480 ! videoconvert ! appsink";
+        let cap = videoio::VideoCapture::from_file(pipeline, videoio::CAP_GSTREAMER)
+            .context("Failed to open GStreamer pipeline")?;
 
-        cap.set(videoio::CAP_PROP_FRAME_WIDTH, 640.0)?;
-        cap.set(videoio::CAP_PROP_FRAME_HEIGHT, 480.0)?;
-        cap.set(videoio::CAP_PROP_FPS, 30.0)?;
-
-        if !videoio::VideoCapture::is_opened(&cap)? {
+        if !cap.is_opened()? {
             anyhow::bail!("Camera was not opened");
         }
 
-        Ok(Camera { cap })
+        Ok(Camera {
+            cap,
+            last_save: std::time::Instant::now(),
+        })
     }
 
     pub fn frame(&mut self) -> Result<Mat> {
         let mut frame = Mat::default();
         self.cap.read(&mut frame)?;
-
         if frame.size()?.width == 0 {
             anyhow::bail!("Captured empty frame");
+        }
+
+        // Save frame every 10 seconds
+        if self.last_save.elapsed().as_secs() >= 10 {
+            let filename = "/tmp/frame.jpg";
+            opencv::imgcodecs::imwrite(&filename, &frame, &opencv::core::Vector::<i32>::new())?;
+            self.last_save = std::time::Instant::now();
+            println!("Save frame");
         }
 
         Ok(frame)

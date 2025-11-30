@@ -25,6 +25,12 @@ dtparam=i2c_arm=on
 dtoverlay=i2c1,pins_2_3
 ```
 
+Install camera gstreamer:
+
+```bash
+sudo apt install libcamera-apps gstreamer1.0-tools gstreamer1.0-libcamera
+```
+
 Reboot the RPI
 
 ```bash

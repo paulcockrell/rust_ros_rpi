@@ -6,6 +6,7 @@ use hal::neopixel::Neopixel;
 use hal::servo::Servo;
 use hal::ultrasound::UltrasoundSensor;
 
+use opencv::core::MatTraitConst;
 use rand::Rng;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -232,13 +233,24 @@ async fn main() {
     }
 
     {
-        let mut camera = Camera::new(0).expect("Camera connect failed");
+        let mut camera = Camera::new().expect("Camera connect failed");
+        println!("Camera ready");
 
         tokio::spawn(async move {
             loop {
                 match camera.grayscale() {
                     Ok(gray) => {
-                        println!("Captured frame {:?}", gray.size());
+                        let size = gray.size();
+                        match size {
+                            Ok(s) => {
+                                if s.width > 0 {
+                                    println!("Captured frame {:?}", s);
+                                } else {
+                                    println!("Empty frame");
+                                }
+                            }
+                            Err(e) => eprintln!("Failed to get frame size: {e}"),
+                        }
                     }
                     Err(e) => eprintln!("Camera error: {e}"),
                 }
