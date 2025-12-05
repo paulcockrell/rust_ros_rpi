@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Rusty Robot Dashboard</title>
+    <link rel="stylesheet" href="/static/pico.min.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>🤖 Rusty Robot</h1>
+      <p>Welcome to the control panel.</p>
+
+      <section>
+        <h3>Sensors</h3>
+        <div
+          id="sensor-panel"
+          hx-get="/partials/sensors"
+          hx-trigger="load"
+          hx-swap="innerHTML"
+        >
+          Loading sensors…
+        </div>
+      </section>
+
+      <section>
+        <h3>Controls</h3>
+        <button hx-post="/api/motor/forward">Forward</button>
+        <button hx-post="/api/motor/stop">Stop</button>
+      </section>
+    </main>
+
+    <script src="/static/htmx.min.js"></script>
+  </body>
+</html>
