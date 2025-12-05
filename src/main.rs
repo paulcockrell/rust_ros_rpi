@@ -14,9 +14,17 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::io::AsyncReadExt;
 use tokio::net::UnixListener;
+use tokio::signal;
 use tokio::sync::mpsc;
 use tokio::task;
-use tokio::time::{Duration, sleep};
+use tokio::time::Duration;
+
+use axum::{
+    Router,
+    response::Html,
+    routing::{get, post},
+};
+use tower_http::services::ServeDir;
 
 #[derive(Deserialize, Debug)]
 enum MotorDirection {
@@ -140,8 +148,6 @@ async fn main() {
                 avg = avg * 0.7 + (new_value as f64) * 0.3;
 
                 if avg != last_avg {
-                    println!("Ultrasound changed: {}", avg);
-
                     last_avg = avg;
 
                     if let Err(e) = tx.send(Command::Servo { angle: avg as u8 }).await {
@@ -243,10 +249,8 @@ async fn main() {
                         let size = gray.size();
                         match size {
                             Ok(s) => {
-                                if s.width > 0 {
-                                    println!("Captured frame {:?}", s);
-                                } else {
-                                    println!("Empty frame");
+                                if s.width <= 0 {
+                                    println!("Captured empty frame, something may be wrong");
                                 }
                             }
                             Err(e) => eprintln!("Failed to get frame size: {e}"),
@@ -305,10 +309,40 @@ async fn main() {
         });
     }
 
-    // Keep main alive
-    while !shutdown.load(Ordering::SeqCst) {
-        sleep(Duration::from_millis(200)).await;
-    }
+    let static_files = ServeDir::new("static");
 
-    println!("Exiting Main thread");
+    let app = Router::new()
+        .route("/", get(index))
+        .nest_service("/static", static_files)
+        .route("/partials/sensors", get(partial_sensors))
+        .route("/api/motor/forward", post(|| async { "ok" }))
+        .route("/api/motor/stop", post(|| async { "ok" }));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+
+    println!("🚀 Robot UI running at http://0.0.0.0:3000");
+
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
+}
+
+async fn shutdown_signal() {
+    signal::ctrl_c()
+        .await
+        .expect("failed to install Ctrl+C handler");
+
+    println!("Shutting down...");
+}
+
+async fn index() -> Html<String> {
+    let html =
+        std::fs::read_to_string("templates/index.html").expect("missing templates/index.html");
+
+    Html(html)
+}
+
+async fn partial_sensors() -> Html<&'static str> {
+    Html("<p>No sensors wired yet :-)</p>")
 }
