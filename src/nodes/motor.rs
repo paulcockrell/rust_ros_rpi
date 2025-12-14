@@ -6,6 +6,10 @@ pub async fn run(bus: EventBus) {
     loop {
         match rx.recv().await {
             Ok(Event::MotorCommand(cmd)) => {
+                println!(
+                    "Received direction={:?}, speed={:?}",
+                    cmd.direction, cmd.speed,
+                );
                 // drive motors
             }
             Ok(Event::Shutdown) => {
