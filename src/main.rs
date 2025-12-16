@@ -3,6 +3,8 @@ mod hal;
 mod nodes;
 mod state;
 
+use tokio::task::LocalSet;
+
 use hal::camera::Camera;
 use hal::motor::Motor;
 use hal::neopixel::Neopixel;
@@ -82,7 +84,7 @@ async fn socket_responder(path: &str, command_tx: mpsc::Sender<String>) -> anyho
     }
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() {
     println!("Starting Main thread");
 
@@ -399,23 +401,33 @@ async fn main() {
 
     let bus = EventBus::new(64);
 
+    let local = LocalSet::new();
+
     let handles = vec![
         tokio::spawn(nodes::motor::run(bus.clone())),
         tokio::spawn(nodes::ldr::run(bus.clone())),
         tokio::spawn(nodes::camera::run(bus.clone())),
         tokio::spawn(nodes::web::run(bus.clone())),
+        tokio::spawn(nodes::ultrasound::run(bus.clone())),
     ];
 
-    tokio::signal::ctrl_c()
-        .await
-        .expect("failed to setup CTRL+C handler");
+    // Local hardware node
+    local.spawn_local(nodes::leds::run(bus.clone()));
 
-    println!("CTRL-C received. Shutting down.");
-    bus.publish(Event::Shutdown);
+    local
+        .run_until(async {
+            tokio::signal::ctrl_c()
+                .await
+                .expect("failed to setup CTRL+C handler");
 
-    for h in handles {
-        let _ = h.await;
-    }
+            println!("CTRL-C received. Shutting down.");
+            bus.publish(Event::Shutdown);
+
+            for h in handles {
+                let _ = h.await;
+            }
+        })
+        .await;
 
     println!("Shutdown complete");
 }

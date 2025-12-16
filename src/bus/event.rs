@@ -1,9 +1,6 @@
 #[derive(Debug, Clone)]
 pub enum MotorDirection {
     Forward,
-    Backward,
-    Left,
-    Right,
     Stop,
 }
 
@@ -14,14 +11,14 @@ pub struct MotorCommand {
 }
 
 #[derive(Debug, Clone)]
-pub enum MotorState {}
-
-#[derive(Debug, Clone)]
-pub enum LedCommand {}
+pub struct Ultrasound {
+    pub distance: f64,
+}
 
 #[derive(Debug, Clone)]
 pub enum Event {
     MotorCommand(MotorCommand),
     CameraFrameReady,
+    Ultrasound(Ultrasound),
     Shutdown,
 }
