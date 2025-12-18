@@ -1,4 +1,5 @@
 use axum::extract::State;
+use axum::http::Response;
 use axum::response::IntoResponse;
 use axum::{Router, response::Html, routing::get, routing::post};
 use std::sync::Arc;
@@ -7,7 +8,7 @@ use tower_http::services::ServeDir;
 use tower_http::services::ServeFile;
 
 use crate::bus::bus::EventBus;
-use crate::bus::event::{Event, MotorCommand, MotorDirection};
+use crate::bus::event::{Event, MotorCommand, MotorDirection, ServoCommand};
 
 pub async fn run(bus: EventBus) {
     let bus = Arc::new(bus);
@@ -21,7 +22,12 @@ pub async fn run(bus: EventBus) {
         .route("/partials/camera", get(partial_camera))
         .route("/partials/sensors", get(partial_sensors))
         .route("/api/motor/forward", post(motor_forward_handler))
+        .route("/api/motor/backward", post(motor_backward_handler))
+        .route("/api/motor/left", post(motor_left_handler))
+        .route("/api/motor/right", post(motor_right_handler))
         .route("/api/motor/stop", post(motor_stop_handler))
+        .route("/api/servo/up", post(servo_up_handler))
+        .route("/api/servo/down", post(servo_down_handler))
         .layer(CorsLayer::permissive())
         .with_state(bus.clone());
 
@@ -87,7 +93,7 @@ async fn partial_camera() -> impl IntoResponse {
     format!("/camera/frame.jpg?ts={}", ts)
 }
 
-async fn motor_forward_handler(State(bus): State<Arc<EventBus>>) {
+async fn motor_forward_handler(State(bus): State<Arc<EventBus>>) -> impl IntoResponse {
     println!("Received forward command");
 
     let cmd = MotorCommand {
@@ -96,9 +102,50 @@ async fn motor_forward_handler(State(bus): State<Arc<EventBus>>) {
     };
 
     bus.publish(Event::MotorCommand(cmd));
+
+    "Forward"
 }
 
-async fn motor_stop_handler(State(bus): State<Arc<EventBus>>) {
+async fn motor_backward_handler(State(bus): State<Arc<EventBus>>) -> impl IntoResponse {
+    println!("Received backward command");
+
+    let cmd = MotorCommand {
+        direction: MotorDirection::Backward,
+        speed: 90,
+    };
+
+    bus.publish(Event::MotorCommand(cmd));
+
+    "Backward"
+}
+
+async fn motor_left_handler(State(bus): State<Arc<EventBus>>) -> impl IntoResponse {
+    println!("Received turn left command");
+
+    let cmd = MotorCommand {
+        direction: MotorDirection::Left,
+        speed: 100,
+    };
+
+    bus.publish(Event::MotorCommand(cmd));
+
+    "Left"
+}
+
+async fn motor_right_handler(State(bus): State<Arc<EventBus>>) -> impl IntoResponse {
+    println!("Received turn right command");
+
+    let cmd = MotorCommand {
+        direction: MotorDirection::Right,
+        speed: 100,
+    };
+
+    bus.publish(Event::MotorCommand(cmd));
+
+    "Right"
+}
+
+async fn motor_stop_handler(State(bus): State<Arc<EventBus>>) -> impl IntoResponse {
     println!("Received stop command");
 
     let cmd = MotorCommand {
@@ -107,4 +154,26 @@ async fn motor_stop_handler(State(bus): State<Arc<EventBus>>) {
     };
 
     bus.publish(Event::MotorCommand(cmd));
+
+    "Stop"
+}
+
+async fn servo_up_handler(State(bus): State<Arc<EventBus>>) -> impl IntoResponse {
+    println!("Received servo up command");
+
+    let cmd = ServoCommand { angle: 170 };
+
+    bus.publish(Event::ServoCommand(cmd));
+
+    "Up"
+}
+
+async fn servo_down_handler(State(bus): State<Arc<EventBus>>) -> impl IntoResponse {
+    println!("Received servo down command");
+
+    let cmd = ServoCommand { angle: 10 };
+
+    bus.publish(Event::ServoCommand(cmd));
+
+    "Down"
 }

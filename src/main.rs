@@ -409,6 +409,7 @@ async fn main() {
         tokio::spawn(nodes::camera::run(bus.clone())),
         tokio::spawn(nodes::web::run(bus.clone())),
         tokio::spawn(nodes::ultrasound::run(bus.clone())),
+        tokio::spawn(nodes::servo::run(bus.clone())),
     ];
 
     // Local hardware node

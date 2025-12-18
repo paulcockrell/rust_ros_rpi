@@ -19,15 +19,15 @@ impl Motor {
     }
 
     pub fn forward(&mut self, speed: u8 /* 0..100 */) -> Result<()> {
-        self.in1.set_high();
-        self.in2.set_low();
+        self.in1.set_low();
+        self.in2.set_high();
         let duty_cycle = speed as f64 / 100.0;
         Ok(self.en.set_pwm_frequency(1000.0, duty_cycle)?)
     }
 
     pub fn backward(&mut self, speed: u8 /* 0..100 */) -> Result<()> {
-        self.in1.set_low();
-        self.in2.set_high();
+        self.in1.set_high();
+        self.in2.set_low();
         let duty_cycle = speed as f64 / 100.0;
         Ok(self.en.set_pwm_frequency(1000.0, duty_cycle)?)
     }
