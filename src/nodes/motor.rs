@@ -1,7 +1,7 @@
 use crate::{
     bus::{
-        bus::EventBus,
         event::{Event, MotorDirection},
+        event_bus::EventBus,
     },
     hal::motor::Motor,
 };

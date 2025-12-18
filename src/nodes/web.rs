@@ -1,5 +1,4 @@
 use axum::extract::State;
-use axum::http::Response;
 use axum::response::IntoResponse;
 use axum::{Router, response::Html, routing::get, routing::post};
 use std::sync::Arc;
@@ -7,8 +6,8 @@ use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use tower_http::services::ServeFile;
 
-use crate::bus::bus::EventBus;
 use crate::bus::event::{Event, MotorCommand, MotorDirection, ServoCommand};
+use crate::bus::event_bus::EventBus;
 
 pub async fn run(bus: EventBus) {
     let bus = Arc::new(bus);

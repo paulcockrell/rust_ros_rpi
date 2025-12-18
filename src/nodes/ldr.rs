@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::{
-    bus::{bus::EventBus, event::Event},
+    bus::{event::Event, event_bus::EventBus},
     hal::ldr::Ldr,
 };
 

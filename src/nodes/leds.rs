@@ -1,5 +1,5 @@
 use crate::{
-    bus::{bus::EventBus, event::Event},
+    bus::{event::Event, event_bus::EventBus},
     hal::neopixel::Neopixel,
 };
 use std::time::Duration;

@@ -1,7 +1,7 @@
 use crate::{
     bus::{
-        bus::EventBus,
         event::{Event, Ultrasound},
+        event_bus::EventBus,
     },
     hal::ultrasound::UltrasoundSensor,
 };

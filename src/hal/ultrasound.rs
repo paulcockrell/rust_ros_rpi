@@ -54,6 +54,6 @@ impl UltrasoundSensor {
 
         let distance_cm = (secs * self.speed_of_sound * 100.0) / 2.0;
 
-        return Some(distance_cm as u16);
+        Some(distance_cm as u16)
     }
 }
