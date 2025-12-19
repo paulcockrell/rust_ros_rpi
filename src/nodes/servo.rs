@@ -11,8 +11,7 @@ pub async fn run(bus: EventBus) {
         match rx.recv().await {
             Ok(Event::ServoCommand(cmd)) => {
                 println!("Servo angle: {}", cmd.angle);
-                let new_angle = cmd.angle.clamp(0, 180);
-                let _ = servo.set_angle(new_angle);
+                let _ = servo.set_angle(cmd.angle);
             }
             Ok(Event::Shutdown) => {
                 println!("Servo node shutting down");
