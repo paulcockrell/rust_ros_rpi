@@ -30,13 +30,6 @@ impl Camera {
             anyhow::bail!("Captured empty frame");
         }
 
-        // Save frame every 10 seconds
-        if self.last_save.elapsed().as_secs() >= 10 {
-            let filename = "/tmp/frame.jpg";
-            opencv::imgcodecs::imwrite(&filename, &frame, &opencv::core::Vector::<i32>::new())?;
-            self.last_save = std::time::Instant::now();
-        }
-
         Ok(frame)
     }
 
@@ -46,5 +39,19 @@ impl Camera {
         imgproc::cvt_color(&frame, &mut gray, imgproc::COLOR_BGR2GRAY, 0)?;
 
         Ok(gray)
+    }
+
+    pub fn save_frame(&mut self) -> Result<bool> {
+        // Minimum frame saving frequency of 1 seconds to allow it to complete
+        if self.last_save.elapsed().as_secs() >= 1 {
+            let filename = "/tmp/frame.jpg";
+            let frame = self.grayscale()?;
+            opencv::imgcodecs::imwrite(filename, &frame, &opencv::core::Vector::<i32>::new())?;
+            self.last_save = std::time::Instant::now();
+
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 }

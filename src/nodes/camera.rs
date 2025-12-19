@@ -11,7 +11,11 @@ pub async fn run(bus: EventBus) {
     loop {
         tokio::select! {
             _ = tokio::time::sleep(Duration::from_secs(1))=>{
-                let _ = camera.frame();
+                if matches!(camera.save_frame(), Ok(true)) {
+                    println!("Saved frame");
+                } else {
+                    println!("Failed to save frame");
+                }
             }
             msg = rx.recv()=>{
                 if matches!(msg, Ok(Event::Shutdown)) {

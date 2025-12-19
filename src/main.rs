@@ -24,7 +24,7 @@ async fn main() {
     let local = LocalSet::new();
 
     local.spawn_local(nodes::leds::run(bus.clone()));
-    local.spawn_local(nodes::servo::run(bus.clone())),
+    local.spawn_local(nodes::servo::run(bus.clone()));
 
     local
         .run_until(async {

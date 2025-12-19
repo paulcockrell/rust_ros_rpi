@@ -27,7 +27,6 @@ pub struct Ultrasound {
 pub enum Event {
     MotorCommand(MotorCommand),
     ServoCommand(ServoCommand),
-    CameraFrameReady,
     Ultrasound(Ultrasound),
     Shutdown,
 }
