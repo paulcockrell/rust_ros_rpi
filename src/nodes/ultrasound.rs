@@ -5,47 +5,49 @@ use crate::{
     },
     hal::ultrasound::UltrasoundSensor,
 };
-use std::time::Duration;
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Duration,
+};
 
 pub async fn run(bus: EventBus) {
     let mut bus_rx = bus.subscribe();
-
-    // Clone bus sender handle for blocking thread
     let bus_tx = bus.clone();
 
-    // === Blocking sensor thread ===
-    let sensor_thread = std::thread::spawn(move || {
+    let running = Arc::new(AtomicBool::new(true));
+    let running_thread = running.clone();
+
+    // === Blocking ultrasound sensor thread ===
+    let task = tokio::task::spawn_blocking(move || {
         let mut us = UltrasoundSensor::new(11, 8).expect("Ultrasound init failed");
         let mut avg = 0.0;
         let mut last_avg = 0.0;
 
-        loop {
+        while running_thread.load(Ordering::Relaxed) {
             let dist = us.measure_cm().unwrap_or(0);
-            let new_value = (dist as f64).clamp(0.0, 100.0);
-
-            avg = avg * 0.7 + new_value * 0.3;
+            avg = avg * 0.7 + (dist as f64) * 0.3;
 
             if (avg - last_avg).abs() > 0.1 {
                 bus_tx.publish(Event::Ultrasound(Ultrasound { distance: avg }));
                 last_avg = avg;
             }
 
-            std::thread::sleep(Duration::from_millis(100));
+            std::thread::sleep(Duration::from_millis(200));
         }
+
+        println!("Ultrasound Blocking task exited");
     });
 
-    // === Async shutdown watcher ===
-    loop {
-        match bus_rx.recv().await {
-            Ok(Event::Shutdown) => {
-                println!("Ultrasound node shutting down");
-                break;
-            }
-            Err(_) => break,
-            _ => {}
+    while let Ok(event) = bus_rx.recv().await {
+        if matches!(event, Event::Shutdown) {
+            println!("Ultrasound node shutting down");
+            break;
         }
     }
 
-    // Thread will naturally exit when process shuts down
-    let _ = sensor_thread.join();
+    running.store(false, Ordering::Relaxed);
+    let _ = task.await;
 }
