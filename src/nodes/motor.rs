@@ -17,35 +17,27 @@ pub async fn run(bus: EventBus) {
         let mut left = Motor::new(26, 21, 4).unwrap();
         let mut right = Motor::new(27, 18, 17).unwrap();
 
-        loop {
-            match rx.recv_timeout(Duration::from_millis(50)) {
-                Ok(cmd) => match cmd.direction {
-                    MotorDirection::Forward => {
-                        let _ = left.forward(cmd.speed);
-                        let _ = right.forward(cmd.speed);
-                    }
-                    MotorDirection::Backward => {
-                        let _ = left.backward(cmd.speed);
-                        let _ = right.backward(cmd.speed);
-                    }
-                    MotorDirection::Left => {
-                        let _ = left.backward(cmd.speed);
-                        let _ = right.forward(cmd.speed);
-                    }
-                    MotorDirection::Right => {
-                        let _ = left.forward(cmd.speed);
-                        let _ = right.backward(cmd.speed);
-                    }
-                    MotorDirection::Stop => {
-                        let _ = left.forward(0);
-                        let _ = right.forward(0);
-                    }
-                },
-                Err(mpsc::RecvTimeoutError::Timeout) => {
-                    // idle tick, do nothing
+        while let Ok(cmd) = rx.recv() {
+            match cmd.direction {
+                MotorDirection::Forward => {
+                    let _ = left.forward(cmd.speed);
+                    let _ = right.forward(cmd.speed);
                 }
-                Err(mpsc::RecvTimeoutError::Disconnected) => {
-                    break;
+                MotorDirection::Backward => {
+                    let _ = left.backward(cmd.speed);
+                    let _ = right.backward(cmd.speed);
+                }
+                MotorDirection::Left => {
+                    let _ = left.backward(cmd.speed);
+                    let _ = right.forward(cmd.speed);
+                }
+                MotorDirection::Right => {
+                    let _ = left.forward(cmd.speed);
+                    let _ = right.backward(cmd.speed);
+                }
+                MotorDirection::Stop => {
+                    let _ = left.stop();
+                    let _ = right.stop();
                 }
             }
         }
