@@ -5,19 +5,17 @@ use crate::{
     hal::servo::Servo,
 };
 
-// 🌐 1. Async / control world (Tokio)
-// * Listens to bus_rx (your event bus)
+// Async
+// * Listens to bus_rx
 // * Decides what should happen
-// * Sends intent (angle, speed, etc.)
+// * Sends intent (new servo angle)
 // * Never touches hardware
 //
-// ⚙️ 2. Blocking / hardware world (OS thread)
+// Blocking
 // * Owns the servo
 // * Owns timing
 // * Waits for commands
 // * Talks directly to GPIO / PWM
-// * They communicate through a standard channel.
-// * In short: Async code decides what should happen; blocking code decides when and how.
 //
 // async task        blocking task
 //  │                  │
@@ -25,7 +23,6 @@ use crate::{
 //  └──────────────▶   │
 //                     │ waits (blocking OK)
 //                     │ controls hardware
-
 pub async fn run(bus: EventBus) {
     let mut bus_rx = bus.subscribe();
 
