@@ -1,5 +1,5 @@
 use axum::body::{Body, Bytes};
-use axum::extract::ws::{WebSocket, WebSocketUpgrade};
+use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{Json, State};
 use axum::response::IntoResponse;
 use axum::response::Response;
@@ -9,6 +9,7 @@ use serde::Deserialize;
 use std::convert::Infallible;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::broadcast;
 use tokio::time::sleep;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
@@ -28,6 +29,7 @@ pub async fn run(app_state: AppState) {
     let static_files = ServeDir::new("static");
 
     let app = Router::new()
+        .route("/ws", get(ws_handler))
         .route("/", get(index))
         .nest_service("/static", static_files)
         .nest_service("/camera/frame.jpg", ServeFile::new("/tmp/frame.jpg"))
@@ -38,7 +40,6 @@ pub async fn run(app_state: AppState) {
         .route("/api/motor", post(motor_command))
         .route("/api/servo", post(servo_command))
         .route("/api/leds", post(led_command))
-        .route("/ws", get(ws_handler))
         .layer(CorsLayer::permissive())
         .with_state(app_state.clone());
 
@@ -283,11 +284,36 @@ pub async fn ws_handler(
 async fn handle_socket(mut socket: WebSocket, telemetry_tx: TelemetryTx) {
     let mut rx = telemetry_tx.subscribe();
 
-    while let Ok(msg) = rx.recv().await {
-        let json = serde_json::to_string(&msg).unwrap();
+    println!("WebSocket connected");
 
-        if socket.send(json.into()).await.is_err() {
-            break; // client disconnected
+    loop {
+        tokio::select! {
+            result = rx.recv() => {
+                match result {
+                    Ok(telemetry) => {
+                        let json = serde_json::to_string(&telemetry).unwrap();
+
+                        if socket.send(Message::Text(json.into())).await.is_err() {
+                            break;
+                        }
+                    }
+                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                        eprintln!("WebSocket lagged, skipped {n} messages");
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        break;
+                    }
+                }
+            }
+
+            msg = socket.recv() => {
+                match msg {
+                    Some(Ok(_))=>{}
+                    _ =>break,
+                }
+            }
         }
     }
+
+    println!("WebSocket disconnected");
 }

@@ -20,33 +20,9 @@
         <h3>Camera</h3>
         <img id="camera" src="/camera/frame.mjpeg" />
       </section>
-      <section>
-        <h3>Sensors</h3>
-        <div id="ultrasound_sensor">Loading ultrasound data…</div>
-        <div id="ldr_sensor">Loading ldr data…</div>
-      </section>
     </main>
 
     <script src="/static/orbit.min.js"></script>
-    <script>
-      const ws = new WebSocket("ws://raspberrypi.local:3000/ws");
-
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-
-        if (msg.Ultrasound) {
-          console.log("Ultrasound:", msg.Ultrasound);
-          document.getElementById("ultrasound_sensor").innerText =
-            msg.Ultrasound.distance.toFixed(1);
-        }
-
-        if (msg.Ldr) {
-          console.log("LDR:", msg.Ldr);
-          document.getElementById("ldr_sensor").innerText =
-            `left=${msg.Ldr.l_val}, middle=${msg.Ldr.m_val}, right=${msg.Ldr.r_val}`;
-        }
-      };
-    </script>
 
     <script type="importmap">
       {
@@ -62,13 +38,13 @@
     <script type="module">
       import { Fragment, render } from "preact";
       import { signal } from "@preact/signals";
-      import { useEffect, useLayoutEffect } from "preact/hooks";
+      import { useEffect, useRef, useLayoutEffect } from "preact/hooks";
       import { html } from "htm/preact";
 
       const API_BASE_URL = "http://raspberrypi.local:3000/api";
       const SUB_MENUS = {
         servo: {
-          path: "servos",
+          path: "servo",
           orbitButtonClass:
             "orbit-5 shrink-70 from-120 range-120 submenu-buttons",
           orbitAccentClass:
@@ -108,6 +84,8 @@
 
       const mainMenuActive = signal(null);
       const subMenuActive = signal(null);
+      const ultrasoundSensor = signal(null);
+      const ldrSensor = signal(null);
 
       const cx = (obj) =>
         Object.entries(obj)
@@ -116,8 +94,44 @@
           .join(" ");
 
       function App() {
-        // If the main menu option changes, reset the submenu option
+        const wsRef = useRef(null);
+
         mainMenuActive.subscribe(() => (subMenuActive.value = null));
+
+        useEffect(() => {
+          if (wsRef.current) return; // Prevent double-connection
+
+          requestAnimationFrame(() => {
+            wsRef.current = new WebSocket("ws://raspberrypi.local:3000/ws");
+
+            wsRef.current.onopen = () => {
+              console.log("WebSocket opened");
+            };
+
+            wsRef.current.onmessage = (event) => {
+              const msg = JSON.parse(event.data);
+
+              if (msg.Ultrasound) {
+                ultrasoundSensor.value = msg.Ultrasound.distance.toFixed(1);
+              }
+
+              if (msg.Ldr) {
+                ldrSensor.value = msg.Ldr;
+              }
+            };
+
+            wsRef.current.onerror = (err) => {
+              console.error("Websocket error", err);
+            };
+
+            wsRef.current.onclose = () => {
+              console.log("WebSocket closed");
+              wsRef.current = null;
+            };
+          });
+
+          return () => wsRef.current?.close();
+        }, []);
 
         useLayoutEffect(() => {
           const resize = () => Orbit.resize(".wrapper");
@@ -320,7 +334,7 @@
         onClick,
       }) {
         const handleMouseDown = () => onClick(url, name);
-        const handleMouseUp = () => onClick(url, "control-stp");
+        const handleMouseUp = () => onClick(url, "motor.stop");
 
         return html`
           <!-- Button -->
@@ -405,47 +419,43 @@
         `;
       }
 
+      function mapRange(value, inMin, inMax, outMin, outMax) {
+        return outMin + ((value - inMin) * (outMax - outMin)) / (inMax - inMin);
+      }
+
       function UltrasoundGauge() {
+        const SEGMENTS = 18;
+
+        const filledCount = Math.round(
+          mapRange(ultrasoundSensor.value, 1, 100, 0, SEGMENTS),
+        );
+
         return html`
           <div class="orbit-9 from-244 range-120 big-dash">
-            <div
-              class="vector shrink-40 outer-orbit dashed-big green active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big green active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big green active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big green active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big green active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big green active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big green active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big green active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big orange active"
-            ></div>
-            <div
-              class="vector shrink-40 outer-orbit dashed-big orange active"
-            ></div>
-            <div class="vector shrink-40 outer-orbit dashed-big orange"></div>
-            <div class="vector shrink-40 outer-orbit dashed-big orange"></div>
-            <div class="vector shrink-40 outer-orbit dashed-big orange"></div>
-            <div class="vector shrink-40 outer-orbit dashed-big red"></div>
-            <div class="vector shrink-40 outer-orbit dashed-big red"></div>
-            <div class="vector shrink-40 outer-orbit dashed-big red"></div>
-            <div class="vector shrink-40 outer-orbit dashed-big red"></div>
-            <div class="vector shrink-40 outer-orbit dashed-big red"></div>
+            ${Array.from({ length: SEGMENTS }).map((_, i) => {
+              const visualIndex = SEGMENTS - 1 - i;
+              const isActive = visualIndex < filledCount;
+
+              let color = "green";
+              if (i > 8 && i <= 13) color = "orange";
+              if (i > 13) color = "red";
+
+              const klass = `
+                vector
+                shrink-40
+                outer-orbit
+                dashed-big
+                ${color}
+                ${isActive ? "active" : "inner-orbitactive"}
+              `;
+
+              return html`
+                <div
+                  key=${`ultrasound-sensor-gauge-vector-${i}`}
+                  class=${klass}
+                ></div>
+              `;
+            })}
           </div>
         `;
       }
