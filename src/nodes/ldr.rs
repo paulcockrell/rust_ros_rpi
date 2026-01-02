@@ -23,11 +23,14 @@ pub async fn run(bus: EventBus) {
     let task = tokio::task::spawn_blocking(move || {
         let ldr = LdrSensor::new(19, 16, 20).unwrap();
         let mut last_reading: (u8, u8, u8) = (0, 0, 0);
+        let mut tick: u32 = 0;
 
         while running_thread.load(Ordering::Relaxed) {
+            tick = tick.wrapping_add(1);
+
             let readings = ldr.readings();
 
-            if readings != last_reading {
+            if readings != last_reading || tick % 10 == 0 {
                 last_reading = readings;
                 let (l_val, m_val, r_val) = readings;
 
