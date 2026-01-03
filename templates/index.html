@@ -385,22 +385,39 @@
 
       function MenuCowl() {
         return html`
-          <!-- Outer ring -->
+          <!-- Outer ring 1 -->
           <div class="orbit-7 shrink-50" style="z-index: -1;">
-            <o-arc class="shrink-90 angle-0 inner-orbit darker-gray"></o-arc>
+            <o-arc class="shrink-90 angle-0 inner-orbit white"></o-arc>
           </div>
 
-          <!-- Outer ring -->
+          <!-- Outer ring 2 -->
           <div class="orbit-8 shrink-50" style="z-index: -1;">
-            <o-arc class="shrink-90 angle-0 inner-orbit darker-gray"></o-arc>
+            <o-arc class="shrink-90 angle-0 inner-orbit white"></o-arc>
+          </div>
+
+          <!-- Outer ring 3 -->
+          <div class="orbit-9 shrink-50" style="z-index: -1;">
+            <o-arc class="shrink-90 angle-0 inner-orbit white"></o-arc>
           </div>
 
           <!-- Vectors -->
           <div class="orbit-7">
-            <div class="vector angle-0"></div>
-            <div class="vector angle-120"></div>
-            <div class="vector angle-210"></div>
-            <div class="vector angle-240"></div>
+            <div class="vector angle-0 white"></div>
+            <div class="vector angle-120 white"></div>
+            <div class="vector angle-210 white"></div>
+            <div class="vector angle-240 white"></div>
+          </div>
+
+          <div class="orbit-8 range-240 fit-range">
+            <div class="vector white"></div>
+            <div class="vector white"></div>
+            <div class="vector white"></div>
+            <div class="vectorwhite"></div>
+            <div class="vector white"></div>
+            <div class="vector white"></div>
+            <div class="vector white"></div>
+            <div class="vector white"></div>
+            <div class="vector white"></div>
           </div>
 
           <!-- Readings labels -->
@@ -433,7 +450,7 @@
         );
 
         return html`
-          <div class="orbit-9 from-244 range-120 big-dash">
+          <div class="orbit-10 from-244 range-120 big-dash">
             ${Array.from({ length: SEGMENTS }).map((_, i) => {
               const visualIndex = SEGMENTS - 1 - i;
               const isActive = visualIndex > filledCount;
@@ -466,7 +483,7 @@
         const { l_val, m_val, r_val } = ldrSensor.value || {};
 
         return html`
-          <div class="orbit-9 sensor">
+          <div class="orbit-10 sensor">
             <div
               class=${`satellite angle-135 ldr ${r_val === 1 ? "active" : ""} grow-1x`}
             >
@@ -488,7 +505,7 @@
 
       function ServoGauges() {
         return html`
-          <div class="orbit-9 sensor">
+          <div class="orbit-10 sensor">
             <div class="satellite angle-225">
               <div class="gravity-spot">
                 <div class="orbit-0">
@@ -514,7 +531,7 @@
         const { red, green, blue, brightness } = ledSensor.value || {};
 
         return html`
-          <div class="orbit-9 sensor">
+          <div class="orbit-10 sensor">
             <div class="satellite angle-15">
               <div class="gravity-spot">
                 <div class="orbit-0">

@@ -17,38 +17,6 @@
   object-fit: cover;
 }
 
-.radial-hud {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-
-  height: clamp(240px, 40vh, 400px);
-  aspect-ratio: 1 / 1;
-
-  border-radius: 50%;
-  overflow: hidden;
-  pointer-events: auto;
-}
-
-/* Blur layer */
-.radial-hud::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-
-  border-radius: 50%;
-  backdrop-filter: blur(8px);
-  background: rgba(0, 0, 0, 0.4);
-
-  z-index: 0;
-}
-
-/* Actual controls */
-.radial-hud > * {
-  position: relative;
-  z-index: 1;
-}
-
 .wrapper {
   height: clamp(300px, 90vh, 500px);
   width: clamp(300px, 90vh, 500px);
@@ -57,7 +25,7 @@
   overflow: hidden;
 
   backdrop-filter: blur(6px);
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 50%;
 }
 
@@ -121,6 +89,9 @@
   --o-back-fill: var(--o-gray-darker);
   --o-fill: white;
 }
+.vector.white {
+  background-color: white;
+}
 
 .darker-gray {
   --o-back-fill: var(--o-gray-dark);
@@ -138,7 +109,6 @@
 
 .sensor > .satellite.ldr {
   border: 5px solid var(--o-gray);
-  background-color: var(--o-gray-darker);
   color: var(--o-gray-lighter);
 }
 .sensor > .satellite.ldr.active {
@@ -163,7 +133,7 @@
 
 .labels > o-arc {
   --o-fill: none;
-  --o-color: var(--o-gray);
+  --o-color: white;
   font-size: 0.8em;
 }
 
@@ -173,7 +143,7 @@
 }
 
 .dashed-big.orange {
-  background: var(--o-orange-darker);
+  background: var(--o-orange-dark);
 }
 
 .dashed-big.orange.active {
@@ -181,7 +151,7 @@
 }
 
 .dashed-big.green {
-  background: var(--o-green-darker);
+  background: var(--o-green-dark);
 }
 
 .dashed-big.green.active {
@@ -189,7 +159,7 @@
 }
 
 .dashed-big.red {
-  background: var(--o-red-darker);
+  background: var(--o-red-dark);
 }
 
 .dashed-big.red.active {
