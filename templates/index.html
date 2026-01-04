@@ -48,20 +48,19 @@
           orbitAccentClass:
             "orbit-6 grow-1x from-120 range-120 submenu-accents",
           buttons: [
-            ["servo.end", "bi-skip-end-circle-fill", 120, 15],
-            ["servo.increment", "bi-plus-circle-fill", 150, 15],
-            ["servo.decrement", "bi-dash-circle-fill", 180, 15],
-            ["servo.start", "bi-skip-start-circle-fill", 210, 15],
+            ["servo.end", "bi-skip-end-circle-fill", 120, 30],
+            ["servo.start", "bi-skip-start-circle-fill", 180, 30],
           ],
         },
 
-        leds: {
-          path: "leds",
-          orbitButtonClass: "orbit-5 shrink-70 range-120 submenu-buttons",
-          orbitAccentClass: "orbit-6 grow-1x range-120 submenu-accents",
+        mode: {
+          path: "mode",
+          orbitButtonClass:
+            "orbit-5 shrink-70 from-0 range-120 submenu-buttons",
+          orbitAccentClass: "orbit-6 grow-1x from-0 range-120 submenu-accents",
           buttons: [
-            ["leds.increment", "bi-plus-circle-fill", 0, 30],
-            ["leds.decrement", "bi-dash-circle-fill", 60, 30],
+            ["mode.manual", "bi-person-fill-gear", 0, 30],
+            ["mode.automatic", "bi-ev-front-fill", 60, 30],
           ],
         },
 
@@ -72,10 +71,10 @@
           orbitAccentClass:
             "orbit-6 grow-1x from-240 range-120 submenu-accents",
           buttons: [
-            ["motor.forward", "bi-arrow-up-circle-fill", 330, 15],
-            ["motor.right", "bi-arrow-right-circle-fill", 300, 15],
-            ["motor.left", "bi-arrow-left-circle-fill", 270, 15],
             ["motor.backward", "bi-arrow-down-circle-fill", 240, 15],
+            ["motor.left", "bi-arrow-left-circle-fill", 270, 15],
+            ["motor.right", "bi-arrow-right-circle-fill", 300, 15],
+            ["motor.forward", "bi-arrow-up-circle-fill", 330, 15],
           ],
         },
       };
@@ -238,7 +237,7 @@
       function MainMenuLabels({ action }) {
         return html`
           <div class="orbit-3 main-menu">
-            ${["LEDs", "Servo", "Motor"].map(
+            ${["Mode", "Servo", "Motor"].map(
               (name) =>
                 html`<${MainMenuLabel}
                   action=${action}
@@ -455,13 +454,13 @@
         const SEGMENTS = 18;
 
         function mapRange(value, inMin, inMax, outMin, outMax) {
-          return (
-            outMin + ((value - inMin) * (outMax - outMin)) / (inMax - inMin)
-          );
+          const t = (value - inMin) / (inMax - inMin);
+          const tClamped = Math.max(0, Math.min(1, t));
+          return outMin + tClamped * (outMax - outMin);
         }
 
         const filledCount = Math.round(
-          mapRange(ultrasoundSensor.value, 1, 100, 1, SEGMENTS),
+          mapRange(ultrasoundSensor.value, 0, 100, 0, SEGMENTS - 1),
         );
 
         return html`

@@ -21,8 +21,14 @@ pub struct ServoCommand {
 }
 
 #[derive(Debug, Clone)]
-pub struct LedCommand {
-    pub brightness: i8,
+pub enum Mode {
+    Manual,
+    Automatic,
+}
+
+#[derive(Debug, Clone)]
+pub struct ModeCommand {
+    pub mode: Mode,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -49,7 +55,7 @@ pub struct Led {
 pub enum Event {
     MotorCommand(MotorCommand),
     ServoCommand(ServoCommand),
-    LedCommand(LedCommand),
+    ModeCommand(ModeCommand),
     Ultrasound(Ultrasound),
     Ldr(Ldr),
     #[allow(dead_code)]

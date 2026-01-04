@@ -16,7 +16,7 @@ use tower_http::services::ServeDir;
 use tower_http::services::ServeFile;
 
 use crate::AppState;
-use crate::bus::event::{Event, LedCommand, MotorCommand, MotorDirection, ServoCommand};
+use crate::bus::event::{Event, Mode, ModeCommand, MotorCommand, MotorDirection, ServoCommand};
 use crate::bus::event_bus::EventBus;
 use crate::nodes::telemetry_bridge::TelemetryTx;
 
@@ -39,7 +39,7 @@ pub async fn run(app_state: AppState) {
         .route("/partials/sensors", get(partial_sensors))
         .route("/api/motor", post(motor_command))
         .route("/api/servo", post(servo_command))
-        .route("/api/leds", post(led_command))
+        .route("/api/mode", post(mode_command))
         .layer(CorsLayer::permissive())
         .with_state(app_state.clone());
 
@@ -131,25 +131,23 @@ async fn servo_command(
     println!("Received servo command {:?}", payload);
 
     match payload.action.as_str() {
-        "servo.start" => servo_start_handler(app_state),
-        "servo.increment" => servo_increment_handler(app_state),
-        "servo.decrement" => servo_decrement_handler(app_state),
-        "servo.end" => servo_end_handler(app_state),
+        "servo.start" => servo_handler(app_state, 10),
+        "servo.end" => servo_handler(app_state, 170),
         _ => println!("Unknown command"),
     }
 
     "Ok"
 }
 
-async fn led_command(
+async fn mode_command(
     State(app_state): State<AppState>,
     Json(payload): Json<WebCommand>,
 ) -> impl IntoResponse {
     println!("Received leds command {:?}", payload);
 
     match payload.action.as_str() {
-        "leds.increment" => led_brightness_handler(app_state, 5),
-        "leds.decrement" => led_brightness_handler(app_state, -5),
+        "mode.manual" => mode_handler(app_state, Mode::Manual),
+        "mode.automatic" => mode_handler(app_state, Mode::Automatic),
         _ => println!("Unknown command"),
     }
 
@@ -201,34 +199,16 @@ fn motor_stop_handler(app_state: AppState) {
     app_state.bus.publish(Event::MotorCommand(cmd));
 }
 
-fn servo_end_handler(app_state: AppState) {
-    let cmd = ServoCommand { angle: 170 };
+fn servo_handler(app_state: AppState, angle: u8) {
+    let cmd = ServoCommand { angle };
 
     app_state.bus.publish(Event::ServoCommand(cmd));
 }
 
-fn servo_increment_handler(app_state: AppState) {
-    let cmd = ServoCommand { angle: 25 };
+fn mode_handler(app_state: AppState, mode: Mode) {
+    let cmd = ModeCommand { mode };
 
-    app_state.bus.publish(Event::ServoCommand(cmd));
-}
-
-fn servo_decrement_handler(app_state: AppState) {
-    let cmd = ServoCommand { angle: 75 };
-
-    app_state.bus.publish(Event::ServoCommand(cmd));
-}
-
-fn servo_start_handler(app_state: AppState) {
-    let cmd = ServoCommand { angle: 10 };
-
-    app_state.bus.publish(Event::ServoCommand(cmd));
-}
-
-fn led_brightness_handler(app_state: AppState, value: i8) {
-    let cmd = LedCommand { brightness: value };
-
-    app_state.bus.publish(Event::LedCommand(cmd));
+    app_state.bus.publish(Event::ModeCommand(cmd));
 }
 
 async fn mjpeg_handler(State(app_state): State<AppState>) -> impl IntoResponse {
