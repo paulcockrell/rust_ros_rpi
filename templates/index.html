@@ -408,11 +408,11 @@
             <div class="vector angle-240 white"></div>
           </div>
 
-          <div class="orbit-8 range-240 fit-range">
+          <div class="orbit-8 from-0 range-240 fit-range">
             <div class="vector white"></div>
             <div class="vector white"></div>
             <div class="vector white"></div>
-            <div class="vectorwhite"></div>
+            <div class="vector white"></div>
             <div class="vector white"></div>
             <div class="vector white"></div>
             <div class="vector white"></div>
@@ -420,7 +420,22 @@
             <div class="vector white"></div>
           </div>
 
-          <!-- Readings labels -->
+          <!-- Readings sub labels -->
+          <div class="orbit-8 from-0 range-240 fit-range shrink-20 labels">
+            <o-arc text-anchor="middle" class="grow-1x">red</o-arc>
+            <o-arc text-anchor="middle" class="grow-1x">green</o-arc>
+            <o-arc text-anchor="middle" class="grow-1x">blue</o-arc>
+            <o-arc text-anchor="middle" class="grow-1x">brightness</o-arc>
+            <o-arc text-anchor="middle" class="grow-1x">right</o-arc>
+            <o-arc text-anchor="middle" class="grow-1x">middle</o-arc>
+            <o-arc text-anchor="middle" class="grow-1x">left</o-arc>
+            <o-arc text-anchor="middle" class="grow-1x">angle %</o-arc>
+            <o-arc text-anchor="middle" class="grow-1x angle-280">
+              100+ → 0 cm</o-arc
+            >
+          </div>
+
+          <!-- Readings main labels -->
           <div class="orbit-7 shrink-20 labels">
             <o-arc text-anchor="middle" class="grow-1x angle-15"
               >Neopixel lights</o-arc
@@ -531,8 +546,8 @@
         const { red, green, blue, brightness } = ledSensor.value || {};
 
         return html`
-          <div class="orbit-10 sensor">
-            <div class="satellite angle-15">
+          <div class="orbit-10 sensor from-15 range-120">
+            <div class="satellite">
               <div class="gravity-spot">
                 <div class="orbit-0">
                   <div class="satellite">
@@ -549,7 +564,7 @@
                 </div>
               </div>
             </div>
-            <div class="satellite angle-45">
+            <div class="satellite">
               <div class="gravity-spot">
                 <div class="orbit-0">
                   <div class="satellite">
@@ -566,7 +581,7 @@
                 </div>
               </div>
             </div>
-            <div class="satellite angle-75">
+            <div class="satellite">
               <div class="gravity-spot">
                 <div class="orbit-0">
                   <div class="satellite">
@@ -583,7 +598,7 @@
                 </div>
               </div>
             </div>
-            <div class="satellite angle-105">
+            <div class="satellite">
               <div class="gravity-spot">
                 <div class="orbit-0">
                   <div class="satellite">
