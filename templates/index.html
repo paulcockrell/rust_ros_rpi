@@ -475,11 +475,9 @@
 
               const klass = `
                 vector
-                shrink-40
-                outer-orbit
-                dashed-big
+    dashed-big
                 ${color}
-                ${isActive ? "active" : "inner-orbitactive"}
+                ${isActive ? "active grow-0.2x" : "shrink-40"}
               `;
 
               return html`
