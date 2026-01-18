@@ -94,6 +94,15 @@
           .map(([k]) => k)
           .join(" ");
 
+      function uuidv4() {
+        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
+          (
+            +c ^
+            (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))
+          ).toString(16),
+        );
+      }
+
       function App() {
         const wsRef = useRef(null);
 
@@ -162,11 +171,17 @@
           }
         };
 
-        const updateCommandHistory = (actionName, status) => {
-          const command = `${actionName} - ${status}`;
-          commandHistory.value = commandHistory.value
-            .concat(command)
-            .slice(-20);
+        const updateCommandHistory = (id, actionName, status) => {
+          const idx = commandHistory.value.findIndex((v) => v.id === id);
+
+          commandHistory.value =
+            idx > -1
+              ? commandHistory.value.map((v, i) =>
+                  i === idx ? { ...v, status } : v,
+                )
+              : commandHistory.value
+                  .concat({ id, actionName, status })
+                  .slice(-20);
         };
 
         const submit = async (url, actionName, opts = {}) => {
@@ -176,7 +191,8 @@
           headers.append("Content-Type", "application/json");
 
           try {
-            updateCommandHistory(actionName, "pending");
+            const id = uuidv4();
+            updateCommandHistory(id, actionName, "pending");
 
             const response = await fetch(url, {
               method,
@@ -185,17 +201,17 @@
             });
 
             if (!response.ok) {
-              updateCommandHistory(actionName, "error");
+              updateCommandHistory(id, actionName, "error");
               console.error("Error processing request", response.status);
               return;
             }
 
             const result = await response.json();
             processResult(actionName, result, opts);
-            updateCommandHistory(actionName, "success");
+            updateCommandHistory(id, actionName, "success");
           } catch (error) {
             console.error("Error making request", error);
-            updateCommandHistory(actionName, "error");
+            updateCommandHistory(id, actionName, "error");
           }
         };
 
@@ -676,8 +692,11 @@
 
       function CommandHistory() {
         return html` <div class="command-history">
+          <div class="heading">command history</div>
           <ul>
-            ${commandHistory.value.map((val) => html`<li>${val}</li>`)}
+            ${commandHistory.value.map(
+              (val) => html`<li>${val.actionName} ${val.status}</li>`,
+            )}
           </ul>
         </div>`;
       }
