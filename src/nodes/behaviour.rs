@@ -25,7 +25,7 @@ pub async fn run(app_state: AppState) {
                         if mode == Mode::Manual {
                             // Reset intents
                             new_intent = Some(MotorDirection::Forward);
-                            last_intent = Some(MotorDirection::Forward);
+                            last_intent = None;
 
                             // Issue all stop
                             let cmd = MotorCommand {
