@@ -42,6 +42,8 @@ curl https://sh.rustup.rs -sSf | sh
 
 Make sure ~/.cargo/bin is in your PATH.
 
+---
+
 2. System packages
 
 ```bash
@@ -60,7 +62,7 @@ sudo apt install -y \
 
 ---
 
-2. Build the project
+3. Build the project
 
 From the repo root:
 
@@ -72,7 +74,7 @@ This compiles the robot binary directly on the Raspberry Pi in debug mode.
 
 ---
 
-3. Run the robot
+4. Run the robot
 
 ```bash
 sudo ./target/debug/hello_robot
@@ -114,10 +116,14 @@ Rather than using an existing robotics framework (e.g. ROS), the system is struc
 
 The main OS components live under src/ and are organised as follows:
 
+```
 src/
 ├── bus/
 ├── hal/
 └── nodes/
+```
+
+---
 
 `bus/` **— Event Bus & Messaging**
 
