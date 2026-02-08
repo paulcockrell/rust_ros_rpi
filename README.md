@@ -83,8 +83,6 @@ sudo ./target/debug/hello_robot
 This starts the robot control service and the embedded web server.
 Open a browser on another device and connect to the Pi’s IP to interact with the UI.
 
----
-
 ## Web Interface
 
 Once the robot is running:
@@ -99,8 +97,6 @@ http://raspberrypi.local:3000
 - The interface is built with Preact (no-build mode) so standard HTML/CSS/JS served from within a Rust webserver.
 
 The static files live in the `static/` and `templates/` folders.
-
----
 
 ## Project structure
 
@@ -168,9 +164,7 @@ Nodes communicate exclusively via the event bus and do not call each other direc
 
 This mirrors a robotics “node” model, but implemented deliberately and minimally rather than via a full framework.
 
----
-
-**Design Goals**
+## Design Goals
 
 - **Explicit architecture** over magic frameworks
 - **Async, event-driven design** suitable for real hardware
@@ -181,8 +175,6 @@ This mirrors a robotics “node” model, but implemented deliberately and minim
 - Easy to extend with new nodes, hardware, or control modes
 
 The physical robot is intentionally simple so that the focus remains on the software architecture and control system design.
-
----
 
 ## License
 
